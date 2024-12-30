@@ -4,6 +4,8 @@
 
 This project implements a distributed system to test and analyze key expiration events in Redis, focusing on efficient event processing and deduplication across multiple consumers.
 
+![Web UI](asset/test-ui.jpg)
+
 ## System Components
 
 - **Generator Service**: Creates Redis keys with specified TTLs

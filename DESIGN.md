@@ -27,7 +27,7 @@ This document describes the design of a system involving a generator and multipl
 │                                                 └──────────────────────┘    │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
-
+```
 Flow:
 1. Generator creates keys with TTL in Redis
 2. Redis publishes expiration events

@@ -103,90 +103,92 @@ export default function App() {
                 </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-4 mb-4">
-                <h2 className="text-xl font-semibold mb-2">Configuration</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-gray-700 mb-1">Number of Keys:</label>
-                        <input
-                            type="number"
-                            value={config.num_keys}
-                            onChange={(e) => setConfig({ ...config, num_keys: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 border rounded"
-                        />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                    <div className="bg-white rounded-lg shadow p-4">
+                        <h2 className="text-xl font-semibold mb-2">Configuration</h2>
+                        <div className="grid grid-cols-1 gap-4">
+                            <div>
+                                <label className="block text-gray-700 mb-1">Number of Keys:</label>
+                                <input
+                                    type="number"
+                                    value={config.num_keys}
+                                    onChange={(e) => setConfig({ ...config, num_keys: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 border rounded"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 mb-1">Key Delay (ms):</label>
+                                <input
+                                    type="number"
+                                    value={config.key_delay}
+                                    onChange={(e) => setConfig({ ...config, key_delay: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 border rounded"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 mb-1">Key TTL (ms):</label>
+                                <input
+                                    type="number"
+                                    value={config.key_ttl}
+                                    onChange={(e) => setConfig({ ...config, key_ttl: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 border rounded"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 mb-1">Dedup Window (ms):</label>
+                                <input
+                                    type="number"
+                                    value={config.dedup_window}
+                                    onChange={(e) => setConfig({ ...config, dedup_window: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 border rounded"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-gray-700 mb-1">Key Delay (ms):</label>
-                        <input
-                            type="number"
-                            value={config.key_delay}
-                            onChange={(e) => setConfig({ ...config, key_delay: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 mb-1">Key TTL (ms):</label>
-                        <input
-                            type="number"
-                            value={config.key_ttl}
-                            onChange={(e) => setConfig({ ...config, key_ttl: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 mb-1">Dedup Window (ms):</label>
-                        <input
-                            type="number"
-                            value={config.dedup_window}
-                            onChange={(e) => setConfig({ ...config, dedup_window: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 border rounded"
-                        />
+
+                    <div className="bg-white rounded-lg shadow p-4">
+                        <h2 className="text-xl font-semibold mb-2">Status</h2>
+                        <div className="space-y-2">
+                            <p className="text-gray-700">Status: <span className="font-semibold">{status.is_running ? 'Running' : 'Stopped'}</span></p>
+                            <p className="text-gray-700">Generated Keys: <span className="font-semibold">{status.generated}</span></p>
+                            <p className="text-gray-700">Consumed Keys: <span className="font-semibold">{status.consumed}</span></p>
+                            <div className="mt-4">
+                                <button
+                                    onClick={status.is_running ? stopTest : startTest}
+                                    className={`w-full px-4 py-2 rounded ${status.is_running ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                                >
+                                    {status.is_running ? 'Stop Test' : 'Start Test'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="bg-white rounded-lg shadow p-4 mb-4">
-                <h2 className="text-xl font-semibold mb-2">Status</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-gray-700">Status: <span className="font-semibold">{status.is_running ? 'Running' : 'Stopped'}</span></p>
-                        <p className="text-gray-700">Generated Keys: <span className="font-semibold">{status.generated}</span></p>
-                        <p className="text-gray-700">Consumed Keys: <span className="font-semibold">{status.consumed}</span></p>
-                    </div>
-                    <div>
-                        <button
-                            onClick={status.is_running ? stopTest : startTest}
-                            className={`px-4 py-2 rounded ${status.is_running ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
-                        >
-                            {status.is_running ? 'Stop Test' : 'Start Test'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4">
-                <h2 className="text-xl font-semibold mb-2">Consumer Metrics</h2>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto">
-                        <thead>
-                            <tr className="bg-gray-100">
-                                <th className="px-4 py-2 text-left">Consumer ID</th>
-                                <th className="px-4 py-2 text-left">Events Processed</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Object.entries(metrics.consumers).map(([id, count]) => (
-                                <tr key={id} className="border-t">
-                                    <td className="px-4 py-2">{id}</td>
-                                    <td className="px-4 py-2">{count}</td>
+                <div className="bg-white rounded-lg shadow p-4">
+                    <h2 className="text-xl font-semibold mb-2">Consumer Metrics</h2>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full table-auto">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="px-4 py-2 text-left">Consumer ID</th>
+                                    <th className="px-4 py-2 text-left">Events Processed</th>
                                 </tr>
-                            ))}
-                            <tr className="border-t bg-gray-50 font-semibold">
-                                <td className="px-4 py-2">Total Consumed Events</td>
-                                <td className="px-4 py-2">{Object.values(metrics.consumers).reduce((sum, count) => sum + count, 0)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {Object.entries(metrics.consumers).map(([id, count]) => (
+                                    <tr key={id} className="border-t">
+                                        <td className="px-4 py-2">{id}</td>
+                                        <td className="px-4 py-2">{count}</td>
+                                    </tr>
+                                ))}
+                                <tr className="border-t bg-gray-50 font-semibold">
+                                    <td className="px-4 py-2">Total Consumed Events</td>
+                                    <td className="px-4 py-2">{Object.values(metrics.consumers).reduce((sum, count) => sum + count, 0)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

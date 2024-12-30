@@ -3,18 +3,43 @@ package nats
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/nats-io/nats.go"
 )
 
 const (
-	StreamName = "KEEPALIVE_EXPIRATION"
-	Subject    = "Stream.Keepalive.Expiration.*"
+	StreamName = "WORKGROUPPOLICY"
+	Subject    = "Stream.Workgroup.Policy.Events"
+	QueueGroup = "key_expiration_processors"
 )
 
 type Client struct {
 	nc *nats.Conn
 	js nats.JetStreamContext
+}
+
+// initStream creates the stream if it doesn't exist
+func (c *Client) initStream() error {
+	// Check if stream exists
+	stream, err := c.js.StreamInfo(StreamName)
+	if err == nil && stream != nil {
+		return nil // Stream already exists
+	}
+
+	// Create stream with WorkQueue retention
+	_, err = c.js.AddStream(&nats.StreamConfig{
+		Name:      StreamName,
+		Subjects:  []string{Subject},
+		Retention: nats.WorkQueuePolicy,
+		Storage:   nats.MemoryStorage,
+		MaxAge:    24 * time.Hour,
+		Replicas:  1,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create stream: %w", err)
+	}
+	return nil
 }
 
 // NewClient creates a new NATS client with JetStream enabled
@@ -30,10 +55,18 @@ func NewClient(url string) (*Client, error) {
 		return nil, fmt.Errorf("failed to create JetStream context: %w", err)
 	}
 
-	return &Client{
+	client := &Client{
 		nc: nc,
 		js: js,
-	}, nil
+	}
+
+	// Initialize stream
+	if err := client.initStream(); err != nil {
+		nc.Close()
+		return nil, fmt.Errorf("failed to initialize stream: %w", err)
+	}
+
+	return client, nil
 }
 
 // PublishExpiredKey publishes an expired key event to the stream
@@ -43,24 +76,47 @@ func (c *Client) PublishExpiredKey(ctx context.Context, key string) error {
 		Data:    []byte(key),
 	}
 
-	_, err := c.js.PublishMsg(msg)
-	if err != nil {
-		return fmt.Errorf("failed to publish message: %w", err)
+	// Publish with context for timeout control
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		_, err := c.js.PublishMsg(msg)
+		if err != nil {
+			return fmt.Errorf("failed to publish message: %w", err)
+		}
+		return nil
 	}
-
-	return nil
 }
 
-// SubscribeExpiredKeys subscribes to expired key events
+// SubscribeExpiredKeys subscribes to expired key events using queue groups for even distribution
 func (c *Client) SubscribeExpiredKeys(ctx context.Context, handler func(key string)) error {
-	_, err := c.js.Subscribe(Subject, func(msg *nats.Msg) {
-		handler(string(msg.Data))
-		msg.Ack()
-	}, nats.ManualAck())
+	// Create a consumer with queue group for even distribution
+	_, err := c.js.QueueSubscribe(
+		Subject,
+		QueueGroup,
+		func(msg *nats.Msg) {
+			// Process the message
+			handler(string(msg.Data))
+			// Acknowledge successful processing
+			msg.Ack()
+		},
+		// Configure subscription options
+		nats.ManualAck(),            // Enable manual acknowledgment
+		nats.AckWait(5*time.Second), // Set acknowledgment timeout
+		nats.MaxDeliver(3),          // Maximum redelivery attempts
+		nats.DeliverAll(),           // Deliver all messages in the stream
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to subscribe: %w", err)
 	}
+
+	// Monitor context for cancellation
+	go func() {
+		<-ctx.Done()
+		c.Close()
+	}()
 
 	return nil
 }

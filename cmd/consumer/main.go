@@ -55,7 +55,22 @@ func main() {
 		cancel()
 	}()
 
-	// Process expired keys with automatic reconnection
+	// Subscribe to NATS stream for deduplicated events
+	if err := natsClient.SubscribeExpiredKeys(ctx, func(key string) {
+		log.Printf("Consumer %s processing deduplicated key: %s", consumerID, key)
+		// Increment consumer-specific metric
+		if err := redisClient.IncrementConsumerMetric(ctx, consumerID); err != nil {
+			log.Printf("Failed to increment consumer metric: %v", err)
+		}
+		// Increment consumed metric
+		if err := redisClient.IncrementConsumed(ctx); err != nil {
+			log.Printf("Failed to increment consumed metric: %v", err)
+		}
+	}); err != nil {
+		log.Fatalf("Failed to subscribe to NATS stream: %v", err)
+	}
+
+	// Process Redis expired keys with automatic reconnection
 	for {
 		select {
 		case <-ctx.Done():
@@ -81,15 +96,16 @@ func main() {
 					}
 
 					// Process the expired key
-					go handleExpiredKey(ctx, msg.Payload, redisClient, natsClient, consumerID)
+					go handleRedisExpiredKey(ctx, msg.Payload, redisClient, natsClient, consumerID)
 				}
 			}
 		}
 	}
 }
 
-func handleExpiredKey(ctx context.Context, key string, redisClient *redis.Client, natsClient *nats.Client, consumerID string) {
-	log.Printf("Consumer %s received expired key: %s", consumerID, key)
+// handleRedisExpiredKey handles Redis key expiration events and publishes them to NATS
+func handleRedisExpiredKey(ctx context.Context, key string, redisClient *redis.Client, natsClient *nats.Client, consumerID string) {
+	log.Printf("Consumer %s received Redis expired key: %s", consumerID, key)
 
 	// Ignore dedup keys
 	if strings.HasPrefix(key, redis.DedupPrefix) {
@@ -116,14 +132,4 @@ func handleExpiredKey(ctx context.Context, key string, redisClient *redis.Client
 		return
 	}
 	log.Printf("Successfully published key %s to NATS", key)
-
-	// Increment consumed metric
-	if err := redisClient.IncrementConsumed(ctx); err != nil {
-		log.Printf("Failed to increment consumed metric: %v", err)
-	}
-
-	// Increment consumer-specific metric
-	if err := redisClient.IncrementConsumerMetric(ctx, consumerID); err != nil {
-		log.Printf("Failed to increment consumer metric: %v", err)
-	}
 }

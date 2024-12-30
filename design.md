@@ -6,21 +6,21 @@ This document describes the design of a system involving a generator and multipl
 ## Project Structure
 ```
 .
-├── cmd/                    # Command line applications
-│   ├── generator/         # Generator service
-│   └── consumer/         # Consumer service
-├── docker/               # Docker related files
+├── cmd/                 # Command line applications
+│   ├── generator/       # Generator service
+│   └── consumer/        # Consumer service
+├── docker/              # Docker related files
 │   ├── Dockerfile.generator
 │   └── Dockerfile.consumer
-├── k8s/                  # Kubernetes manifests
+├── k8s/                 # Kubernetes manifests
 │   ├── redis/           # Redis deployment
 │   ├── nats/            # NATS deployment
 │   ├── generator/       # Generator deployment
 │   └── consumer/        # Consumer deployment
-├── pkg/                  # Shared packages
+├── pkg/                 # Shared packages
 │   ├── redis/           # Redis client
 │   └── nats/            # NATS client
-├── internal/             # Internal packages
+├── internal/            # Internal packages
 │   └── metrics/         # Metrics tracking
 └── web/                 # Web interface
     └── ui/              # React TypeScript UI
@@ -75,16 +75,24 @@ This document describes the design of a system involving a generator and multipl
   - If a `gen-key` already has a corresponding `dedup` key, ignore its expiration event
   - If no `dedup` key exists:
     1. Create the `dedup` key in Redis
-    2. Publish the expired `gen-key` name to a NATS JetStream stream `KEEPALIVE_EXPIRATION`
+    2. Publish the expired `gen-key` name to a NATS JetStream stream
 
 #### 2.3 NATS JetStream Integration
-- **Stream**: `KEEPALIVE_EXPIRATION`
-  - **Subjects**: `Stream.Keepalive.Expiration.*`
+- **Stream**: `WORKGROUPPOLICY`
+  - **Subjects**: `Stream.Workgroup.Policy.Events`
   - **Retention**: WorkQueue
   - **Storage**: Memory
   - **Max Age**: 24 hours
+  - **Queue Group**: `key_expiration_processors`
+- **Stream Management**:
+  - Each consumer checks for stream existence on startup
+  - Stream is created with WorkQueue policy if it doesn't exist
+- **Message Distribution**:
+  - Queue group subscription ensures even distribution
+  - Manual acknowledgment for reliable processing
+  - Maximum of 3 redelivery attempts
+  - 5-second acknowledgment timeout
 - **Concurrency Safety**: Ensure race-condition-safe operations when publishing messages
-- **Message Acknowledgment**: Manual acknowledgment for reliable processing
 
 ### 3. Redis Deployment
 - **Environment**: Deploy Redis in a Kubernetes cluster using Docker Desktop

@@ -24,8 +24,8 @@ export default function App() {
     const [config, setConfig] = useState<TestConfig>({
         num_keys: 1000,
         key_delay: 10,
-        key_ttl: 5000,
-        dedup_window: 5000,
+        key_ttl: 100,
+        dedup_window: 3000,
     });
 
     const [status, setStatus] = useState<TestStatus>({

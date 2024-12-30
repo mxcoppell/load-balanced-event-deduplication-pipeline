@@ -3,6 +3,8 @@
 ## Overview
 This document describes the design of a system involving a generator and multiple consumers operating in a Kubernetes (k8s) environment. The system's primary goal is to generate Redis keys with expiration and process their expiration events for subsequent operations, while ensuring efficient and fault-tolerant design.
 
+![Web UI](asset/test-ui.jpg)
+
 ## Project Structure
 ```
 .

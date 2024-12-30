@@ -1,4 +1,4 @@
-# Contributing to Key Expiration Test Workgroup
+# Contributing to Load-Balanced Event Deduplication Pipeline
 
 Thank you for your interest in contributing to this project! This document provides guidelines and instructions for contributing.
 

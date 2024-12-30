@@ -84,12 +84,12 @@ export default function App() {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Key Expiration Test</h1>
+            <h1 className="text-2xl font-bold mb-4">Load-Balanced Event Deduplication Pipeline</h1>
 
             <div className="bg-white rounded-lg shadow p-4 mb-4">
                 <h2 className="text-xl font-semibold mb-2">About This Test</h2>
                 <p className="text-gray-700 mb-2">
-                    This test simulates key expiration events in a distributed system using Redis. The system consists of:
+                    This test simulates event deduplication in a distributed system using Redis. The system consists of:
                 </p>
                 <ul className="list-disc list-inside text-gray-700 mb-2 ml-4">
                     <li>A Generator service that creates keys with specified TTLs</li>

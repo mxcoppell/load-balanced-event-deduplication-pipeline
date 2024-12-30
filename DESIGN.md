@@ -3,6 +3,38 @@
 ## Overview
 This document describes the design of a system involving a generator and multiple consumers operating in a Kubernetes (k8s) environment. The system's primary goal is to generate Redis keys with expiration and process their expiration events for subsequent operations, while ensuring efficient and fault-tolerant design.
 
+## Components
+
+```
+                                    Kubernetes Cluster
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  ┌─────────────┐          ┌─────────┐          ┌──────────────────────┐     │
+│  │  Generator  │──────────►  Redis  │◄─────────┤ Consumer Pod 1       │     │
+│  │  Service    │          │         │          │                      │     │
+│  └─────────────┘          │         │          └──────────────────────┘     │
+│         ▲                 │         │                      ▼                 │
+│         │                 │         │          ┌──────────────────────┐     │
+│    ┌────┴────┐           │         │◄─────────┤ Consumer Pod 2       │     │
+│    │ Web UI  │           │         │          │                      │     │
+│    └─────────┘           └─────────┘          └──────────────────────┘     │
+│                              │                          ▼                    │
+│                              │                ┌──────────────────────┐      │
+│                              │                │                      │      │
+│                              └───────────────►│      NATS           │      │
+│                                              │   (WorkQueue)        │      │
+│                                              │                      │      │
+│                                              └──────────────────────┘      │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Flow:
+1. Generator creates keys with TTL in Redis
+2. Redis publishes expiration events
+3. Consumers receive events and create dedup keys
+4. Consumers publish processed events to NATS
+5. NATS distributes events evenly using WorkQueue policy
+
 ![Web UI](asset/test-ui.jpg)
 
 ## Project Structure
@@ -27,8 +59,6 @@ This document describes the design of a system involving a generator and multipl
 └── web/                 # Web interface
     └── ui/              # React TypeScript UI
 ```
-
-## Components
 
 ### 1. Generator Service
 #### 1.1 WebUI

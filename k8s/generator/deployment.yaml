@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generator
+  labels:
+    app: generator
+spec:
+  selector:
+    matchLabels:
+      app: generator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: generator
+    spec:
+      containers:
+        - name: generator
+          image: generator:latest
+          imagePullPolicy: Never # For local development
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: REDIS_ADDR
+              value: "redis:6379"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: generator
+spec:
+  selector:
+    app: generator
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      nodePort: 30080
+  type: NodePort # For local access

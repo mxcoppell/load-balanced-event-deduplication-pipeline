@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  labels:
+    app: consumer
+spec:
+  selector:
+    matchLabels:
+      app: consumer
+  replicas: 6 # As per design doc
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+        - name: consumer
+          image: consumer:latest
+          imagePullPolicy: Never # For local development
+          env:
+            - name: REDIS_ADDR
+              value: "redis:6379"
+            - name: NATS_URL
+              value: "nats://nats:4222"
+            - name: DEDUP_TTL
+              value: "5s"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

@@ -85,9 +85,9 @@ kubectl apply -f k8s/consumer/deployment.yaml
 ```
 .
 ├── cmd/
-│   ├── consumer/     # Consumer service implementation
-│   └── generator/    # Generator service implementation
-├── docker/          # Dockerfiles
+│   ├── consumer/   # Consumer service implementation
+│   └── generator/  # Generator service implementation
+├── docker/         # Dockerfiles
 ├── k8s/            # Kubernetes manifests
 ├── pkg/
 │   ├── nats/       # NATS client implementation

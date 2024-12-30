@@ -1,5 +1,7 @@
 # Key Expiration Test Workgroup
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This project implements a distributed system to test and analyze key expiration events in Redis, focusing on efficient event processing and deduplication across multiple consumers.
 
 ## System Components

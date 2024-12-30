@@ -11,12 +11,12 @@ By participating in this project, you agree to maintain a respectful and inclusi
 1. Fork the repository
 2. Clone your fork:
 ```bash
-git clone https://github.com/your-username/k8s-key-expiration-workgroup.git
-cd k8s-key-expiration-workgroup
+git clone https://github.com/your-username/load-balanced-event-deduplication-pipeline.git
+cd load-balanced-event-deduplication-pipeline
 ```
 3. Add the upstream repository:
 ```bash
-git remote add upstream https://github.com/mxcoppell/k8s-key-expiration-workgroup.git
+git remote add upstream https://github.com/mxcoppell/load-balanced-event-deduplication-pipeline.git
 ```
 
 ## Development Workflow

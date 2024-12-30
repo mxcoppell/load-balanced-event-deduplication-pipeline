@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mxie/k8s-key-expiration-workgroup/pkg/nats"
-	"github.com/mxie/k8s-key-expiration-workgroup/pkg/redis"
+	"github.com/mxie/load-balanced-event-deduplication-pipeline/pkg/nats"
+	"github.com/mxie/load-balanced-event-deduplication-pipeline/pkg/redis"
 )
 
 const (

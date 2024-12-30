@@ -32,8 +32,8 @@ This project implements a distributed system to test and analyze key expiration 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/mxcoppell/k8s-key-expiration-workgroup.git
-cd k8s-key-expiration-workgroup
+git clone https://github.com/mxcoppell/load-balanced-event-deduplication-pipeline.git
+cd load-balanced-event-deduplication-pipeline
 ```
 
 2. Build the services:

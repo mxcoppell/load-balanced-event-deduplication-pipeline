@@ -1,4 +1,4 @@
-module github.com/mxie/k8s-key-expiration-workgroup
+module github.com/mxie/load-balanced-event-deduplication-pipeline
 
 go 1.21
 

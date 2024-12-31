@@ -22,44 +22,74 @@ This project implements a distributed system to test and analyze key expiration 
 
 ## Prerequisites
 
-- Docker
-- Kubernetes cluster (local development uses Docker Desktop's Kubernetes)
+- Docker Desktop with Kubernetes enabled
 - kubectl
-- Node.js (for UI development)
-- Go 1.21+
+- Go 1.21+ (optional, only needed for local development)
+- Node.js 20+ (optional, only needed for local UI development)
 
 ## Setup
 
-1. Clone the repository:
+### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/mxcoppell/load-balanced-event-deduplication-pipeline.git
 cd load-balanced-event-deduplication-pipeline
 ```
 
-2. Build the services:
-```bash
-# Build the WebUI and generator service
-cd web && npm install && npm run build && cd ..
-docker build -t generator:latest -f docker/Dockerfile.generator .
+### 2. Build the Services
 
-# Build the consumer service
+There are two ways to build the services:
+
+#### Option 1: Direct Docker Build (Recommended)
+
+```bash
+# Build the services directly using Docker
+docker build -t generator:latest -f docker/Dockerfile.generator .
 docker build -t consumer:latest -f docker/Dockerfile.consumer .
 ```
 
-3. Deploy to Kubernetes:
+#### Option 2: Local Development Build
+
+Only needed if you want to develop the UI locally:
 ```bash
-# Deploy Redis
+cd web && npm install && npm run build && cd ..
+docker build -t generator:latest -f docker/Dockerfile.generator .
+docker build -t consumer:latest -f docker/Dockerfile.consumer .
+```
+
+### 3. Deploy to Kubernetes
+
+Deploy the services in the following order:
+
+```bash
+# 1. Deploy Redis and wait for it to be ready
 kubectl apply -f k8s/redis/deployment.yaml
+kubectl wait --for=condition=ready pod -l app=redis --timeout=60s
 
-# Deploy NATS
+# 2. Deploy NATS and wait for it to be ready
 kubectl apply -f k8s/nats/deployment.yaml
+kubectl wait --for=condition=ready pod -l app=nats --timeout=60s
 
-# Deploy generator service
+# 3. Deploy generator and consumer services
 kubectl apply -f k8s/generator/deployment.yaml
-
-# Deploy consumer service
 kubectl apply -f k8s/consumer/deployment.yaml
 ```
+
+## Troubleshooting
+
+1. If pods are in CrashLoopBackOff state:
+   - Check if Redis and NATS are fully ready
+   - Use `kubectl logs deployment/<service-name>` to view service logs
+   - If needed, restart services: `kubectl rollout restart deployment/<service-name>`
+
+2. If services can't connect:
+   - Ensure services are deployed in the correct order (Redis → NATS → Generator → Consumer)
+   - Verify all services are running: `kubectl get pods`
+
+3. Common Issues:
+   - Generator failing to start: Usually means Redis is not ready
+   - Consumer pods restarting: Normal during initial NATS stream creation
+   - Connection refused errors: Indicates dependency services are not ready
 
 ## Usage
 

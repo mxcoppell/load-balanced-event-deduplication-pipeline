@@ -32,6 +32,15 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    # web/node_modules is (unusually) committed to the repo and can be stale
+    # relative to web/package.json (e.g. a dependency's package.json here may
+    # already report a version that satisfies package.json's range, so a
+    # plain `npm install` leaves its stale/incomplete files in place instead
+    # of reinstalling). Start from a clean slate so install actually reflects
+    # what's in package.json.
+    - name: Remove stale committed node_modules
+      run: rm -rf node_modules
+
     - name: Install dependencies
       run: npm install
 

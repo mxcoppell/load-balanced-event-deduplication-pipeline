@@ -7,38 +7,91 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test:
+  # Generator UI (web/) — built into the `generator` Docker image via
+  # docker/Dockerfile.generator, which just runs `npm install && npm run build`.
+  # There is no committed lockfile for this project (root .gitignore excludes
+  # package-lock.json), so we mirror that exact install flow here and skip
+  # npm-cache/npm-ci/audit steps that depend on a lockfile being present.
+  test-web:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-    
+
+    defaults:
+      run:
+        working-directory: web
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # web/node_modules is (unusually) committed to the repo and can be stale
+    # relative to web/package.json (e.g. a dependency's package.json here may
+    # already report a version that satisfies package.json's range, so a
+    # plain `npm install` leaves its stale/incomplete files in place instead
+    # of reinstalling). Start from a clean slate so install actually reflects
+    # what's in package.json.
+    - name: Remove stale committed node_modules
+      run: rm -rf node_modules
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run TypeScript build
+      run: npm run build
+
+    - name: Run linting
+      run: npm run lint --if-present
+
+    - name: Run tests
+      run: npm test --if-present
+
+  # Standalone UI (web/ui/) — has its own committed package-lock.json, so it
+  # can use npm ci with proper npm caching and lockfile verification.
+  test-web-ui:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    defaults:
+      run:
+        working-directory: web/ui
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        
+        cache-dependency-path: web/ui/package-lock.json
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Run TypeScript build
       run: npm run build
-      
+
     - name: Run linting
       run: npm run lint --if-present
-      
+
     - name: Run tests
       run: npm test --if-present
-      
+
     - name: Check for security vulnerabilities
       run: npm audit --audit-level high
-      
+
     - name: Verify package-lock.json is up to date
       run: |
         npm ci --package-lock-only
